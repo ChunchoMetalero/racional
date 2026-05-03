@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { envValidationSchema } from './config/env.validation.js';
+import { PortfoliosModule } from './portfolios/portfolios.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module.js';
     PrismaModule,
     UsersModule,
     AuthModule,
+    PortfoliosModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })

@@ -24,7 +24,12 @@ Opcion A: stack completo con Docker (recomendado)
 
 ```bash
 cd racional-api
+
+# Linux/macOS
 cp .env.example .env
+# Windows
+copy .env.example .env
+
 docker compose up
 ```
 
@@ -32,7 +37,12 @@ Opcion B: PostgreSQL en Docker + API local
 
 ```bash
 cd racional-api
+
+# Linux/macOS
 cp .env.example .env
+# Windows
+copy .env.example .env
+
 pnpm install
 docker compose up -d postgres
 pnpm db:setup
@@ -46,6 +56,12 @@ Swagger en `http://localhost:3000/api/v1/docs`.
 
 ```bash
 cd racional-app
+
+# Linux/macOS
+cp .env.example .env
+# Windows
+copy .env.example .env
+
 pnpm install
 pnpm dev
 ```

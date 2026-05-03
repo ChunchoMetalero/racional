@@ -17,7 +17,11 @@ API REST de inversiones construida con **NestJS v11** y **PostgreSQL** (via Pris
 ### Opción A — Stack completo con Docker (más simple)
 
 ```bash
+# Linux/macOS
 cp .env.example .env   # Edita JWT_SECRET con un valor seguro
+# Windows
+copy .env.example .env
+
 docker compose up
 ```
 
@@ -39,7 +43,10 @@ La API queda disponible en `http://localhost:3000/api/v1`. No se requiere ningú
 
 ```bash
 # 1. Configura variables de entorno
+# Linux/macOS
 cp .env.example .env          # Edita DATABASE_URL y JWT_SECRET
+# Windows
+copy .env.example .env
 
 # 2. Instala dependencias
 pnpm install

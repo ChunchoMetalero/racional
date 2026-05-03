@@ -28,6 +28,12 @@ Visualización interactiva del portafolio de inversión con datos en tiempo real
 > Requiere Node 20+ y pnpm.
 
 ```bash
+# Crear archivo de entorno (completar con tus credenciales de Firebase)
+# Linux/macOS
+cp .env.example .env
+# Windows
+copy .env.example .env
+
 # Instalar dependencias
 pnpm install
 

@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { TransactionType } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTransactionDto } from './dto/create-transaction.dto.js';
 import { ListTransactionsQueryDto } from './dto/list-transactions-query.dto.js';
+import { Prisma } from '../generated/prisma/client.js';
 
 @Injectable()
 export class TransactionsService {

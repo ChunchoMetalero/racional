@@ -71,7 +71,7 @@ src/
 
 ## Uso de I.A. en el flujo de trabajo
 
-Este proyecto lo desarrollé usando I.A. como apoyo de programación (pair programming), no como reemplazo de criterio técnico.
+Este proyecto lo desarrollé usando Claude Code como apoyo de programación.
 
 ### 1. Planning asistido
 
@@ -96,14 +96,10 @@ Con el plan aprobado, Claude Code implementó los componentes de forma increment
 
 No acepté el código sin revisión. Corregí manualmente varias partes:
 
-- El formateo de valores monetarios para manejar correctamente los rangos (K / M)
-- El color del gráfico, porque el propuesto inicialmente no era apropiado para contexto financiero
+- El formateo de valores monetarios para manejar correctamente los rangos.
+- El color del gráfico, porque el propuesto inicialmente no era apropiado.
 - El layout del header del Dashboard para alinear correctamente `RealtimeIndicator` y `ThemeToggle` en mobile y desktop
 
 ### 4. Commits
 
 Una vez validado el resultado en el navegador, le pedí a Claude Code que hiciera los commits con mensajes descriptivos siguiendo conventional commits.
-
-### Reflexión
-
-La I.A. fue útil como **par de programación**, no como generador automático de código final. El valor real estuvo en el ciclo: proponer → revisar → corregir → aprobar. Sin revisión crítica, el código compila pero no necesariamente refleja buenas decisiones de producto o diseño.

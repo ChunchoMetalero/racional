@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phoneNumber  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  portfolio    Portfolio?
+  transactions Transaction[]
+  orders       Order[]
+}
+
+model Portfolio {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  name        String   @default("My Portfolio")
+  description String?
+  currency    String   @default("USD") @db.Char(3)
+  cashBalance Decimal  @default(0) @db.Decimal(18, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  positions    Position[]
+  transactions Transaction[]
+  orders       Order[]
+}
+
+model Position {
+  id           String   @id @default(uuid())
+  portfolioId  String
+  ticker       String
+  quantity     Decimal  @default(0) @db.Decimal(18, 8)
+  avgCostBasis Decimal  @default(0) @db.Decimal(18, 8)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id])
+
+  @@unique([portfolioId, ticker])
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  userId      String
+  portfolioId String
+  type        TransactionType
+  amount      Decimal         @db.Decimal(18, 2)
+  date        DateTime        @db.Date
+  notes       String?
+  createdAt   DateTime        @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model Order {
+  id          String    @id @default(uuid())
+  userId      String
+  portfolioId String
+  ticker      String
+  side        OrderSide
+  quantity    Decimal   @db.Decimal(18, 8)
+  price       Decimal   @db.Decimal(18, 8)
+  totalValue  Decimal   @db.Decimal(18, 2)
+  date        DateTime  @db.Date
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}

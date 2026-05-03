@@ -24,10 +24,14 @@ docker compose up
 El proceso de arranque hace automáticamente:
 1. Levanta PostgreSQL y espera a que esté listo (`healthcheck`)
 2. Construye la imagen de la API — durante el build ejecuta `prisma generate` (genera el cliente TypeScript a partir de `schema.prisma`)
-3. Al iniciar el contenedor ejecuta `prisma migrate deploy` — aplica todas las migraciones pendientes y crea las tablas
-4. Arranca el servidor NestJS
+3. Al iniciar el contenedor ejecuta `prisma migrate deploy`
+4. Si no hay migraciones, ejecuta `prisma db push` para crear las tablas
+5. Arranca el servidor NestJS
 
 La API queda disponible en `http://localhost:3000/api/v1`. No se requiere ningún paso adicional de base de datos.
+
+> **Nota Docker (Postgres 18+)**: el volumen se monta en `/var/lib/postgresql` para evitar errores de data directory.
+> Si cambiaste este mount previamente, corre `docker compose down -v` antes de levantar de nuevo.
 
 ---
 
@@ -213,15 +217,17 @@ Este proyecto fue desarrollado con asistencia de herramientas de IA como apoyo a
 
 ### Cómo se integró
 
-**Scaffolding y estructura:** el asistente generó la estructura inicial de módulos NestJS (auth, users, portfolios, transactions, orders), la configuración de Prisma con el schema financiero, los guards globales y la configuración de ValidationPipe.
+La IA se uso como apoyo en tareas puntuales. El diseño, la implementacion y las decisiones principales fueron lideradas por mi.
 
-**Lógica de negocio:** La lógica de promedio ponderado en órdenes de compra, el manejo de transacciones `Serializable` y las validaciones de saldo se desarrollaron iterativamente — el asistente propuso implementaciones que luego se refinaron en función de los requisitos exactos.
+**Scaffolding y estructura:** defini la arquitectura y la separacion de modulos. La IA ayudo a acelerar el boilerplate.
 
-**Decisiones de modelo de datos:** Se discutieron los trade-offs del esquema (precisión decimal, campo `totalValue` desnormalizado, almacenamiento de fechas en UTC, relación User↔Portfolio) y las justificaciones obtenidas se incorporaron directamente al diseño final.
+**Lógica de negocio:** defini las reglas financieras (promedio ponderado, validaciones de saldo, reglas de retiro/venta) y use la IA para contrastar opciones y validar casos borde.
 
-**DTOs y validaciones:** Los decoradores de `class-validator` para cada DTO (incluyendo regex de fechas YYYY-MM-DD y formato de tickers) fueron generados y revisados con el asistente.
+**Decisiones de modelo de datos:** el esquema y los trade-offs fueron definidos por mi, con apoyo de la IA para revisar alternativas.
 
-**Revisión de código:** Al finalizar cada módulo, el asistente revisó el código buscando inconsistencias, posibles vulnerabilidades (inyección, exposición de datos sensibles) y cobertura de casos borde financieros.
+**DTOs y validaciones:** la IA redacto los DTOs base y los decoradores. Yo los revise y ajuste para los requisitos y casos borde.
+
+**Revisión de código:** realice la revision final y los ajustes manuales. La IA tambien hizo un code review complementario.
 
 ### Impacto
 

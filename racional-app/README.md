@@ -1,73 +1,109 @@
-# React + TypeScript + Vite
+# Racional — Mis Inversiones en Tiempo Real
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Visualización interactiva del portafolio de inversión con datos en tiempo real desde Firestore, desarrollada como prueba técnica para Racional.
 
-Currently, two official plugins are available:
+## Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Gráfico de área con la evolución histórica del portafolio
+- 4 métricas clave: valor actual, retorno total, ganancia/pérdida y retorno diario
+- Tabla de movimientos con paginación y ordenamiento (TanStack Table)
+- Indicador de conexión en tiempo real (pulso verde / reconectando)
+- Dark mode con detección automática de preferencia del sistema
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Capa | Tecnología |
+|---|---|
+| Framework | React 19 + TypeScript |
+| Build | Vite 8 |
+| Estilos | Tailwind CSS v4 + shadcn/ui (New York) |
+| Base de datos | Firebase v12 / Firestore |
+| Gráfico | Recharts 3 |
+| Tabla | TanStack Table v8 |
+| Fechas | date-fns v4 |
+| Íconos | Lucide React |
 
-## Expanding the ESLint configuration
+## Cómo correr el proyecto
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+> Requiere Node 20+ y pnpm.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Instalar dependencias
+pnpm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Levantar servidor de desarrollo
+pnpm dev
+# → http://localhost:5173
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build de producción
+pnpm build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Arquitectura
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── config/
+│   └── firebase.ts               # Singleton de Firestore
+├── services/
+│   └── portfolio.service.ts      # Suscripción onSnapshot (sin React)
+├── hooks/
+│   ├── usePortfolioEvolution.ts  # Estado + cleanup del listener
+│   └── useTheme.ts               # Dark mode persistido en localStorage
+├── components/
+│   ├── Dashboard/                # Orquestador principal
+│   ├── PortfolioChart/           # Gráfico de área (Recharts)
+│   ├── MovementsTable/           # Tabla paginada (TanStack Table)
+│   ├── MetricCard/               # Tarjeta de KPI
+│   ├── RealtimeIndicator/        # Indicador de conexión en vivo
+│   ├── ThemeToggle/              # Switch dark/light
+│   ├── LoadingState/             # Skeleton de carga
+│   └── ErrorState/               # Estado de error con mensaje
+└── types/
+    └── portfolio.ts              # Interfaces TypeScript del documento Firestore
+```
+
+**Decisiones de diseño relevantes:**
+
+- Separé responsabilidades para mantener el código simple de razonar: el servicio escucha Firestore y el hook maneja estado/ciclo de vida en React.
+- El dark mode se inicializa en `index.html` antes de montar React, evitando el flash de tema incorrecto en la primera carga.
+
+## Uso de I.A. en el flujo de trabajo
+
+Este proyecto lo desarrollé usando I.A. como apoyo de programación (pair programming), no como reemplazo de criterio técnico.
+
+### 1. Planning asistido
+
+Antes de escribir código, abrí una sesión de planificación con Claude Code. Le describí el enunciado y le pedí que propusiera la arquitectura, el stack y el orden de implementación. Claude generó un plan detallado con componentes, capas y decisiones tecnológicas.
+
+Revisé ese plan, lo ajusté (estructura de carpetas, enfoque del dark mode, elección de librerías) y solo entonces le di luz verde para comenzar a codear.
+
+### 2. Generación de código
+
+Con el plan aprobado, Claude Code implementó los componentes de forma incremental y en orden lógico:
+
+1. Configuración de Firebase y tipos TypeScript
+2. Capa de servicio (`onSnapshot`)
+3. Hook personalizado (`usePortfolioEvolution`)
+4. Componentes UI base (shadcn)
+5. `PortfolioChart`, `MetricCard`, `RealtimeIndicator`, `ThemeToggle`
+6. `MovementsTable` con TanStack Table
+7. `Dashboard` ensamblando todo
+8. Estados de carga y error
+
+### 3. Revisión y correcciones manuales
+
+No acepté el código sin revisión. Corregí manualmente varias partes:
+
+- El formateo de valores monetarios para manejar correctamente los rangos (K / M)
+- El color del gráfico, porque el propuesto inicialmente no era apropiado para contexto financiero
+- El layout del header del Dashboard para alinear correctamente `RealtimeIndicator` y `ThemeToggle` en mobile y desktop
+
+### 4. Commits
+
+Una vez validado el resultado en el navegador, le pedí a Claude Code que hiciera los commits con mensajes descriptivos siguiendo conventional commits.
+
+### Reflexión
+
+La I.A. fue útil como **par de programación**, no como generador automático de código final. El valor real estuvo en el ciclo: proponer → revisar → corregir → aprobar. Sin revisión crítica, el código compila pero no necesariamente refleja buenas decisiones de producto o diseño.

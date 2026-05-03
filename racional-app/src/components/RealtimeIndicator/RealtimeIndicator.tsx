@@ -6,8 +6,8 @@ interface RealtimeIndicatorProps {
   lastUpdated: Date | null;
 }
 
-function getTimeAgo(date: Date): string {
-  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+function getTimeAgo(date: Date, nowMs: number): string {
+  const secs = Math.floor((nowMs - date.getTime()) / 1000);
   if (secs < 5) return 'Ahora mismo';
   if (secs < 60) return `hace ${secs}s`;
   const mins = Math.floor(secs / 60);
@@ -15,26 +15,24 @@ function getTimeAgo(date: Date): string {
 }
 
 export function RealtimeIndicator({ lastUpdated }: RealtimeIndicatorProps) {
-  const [timeAgo, setTimeAgo] = useState('');
-  const [flash, setFlash] = useState(false);
+  const [nowMs, setNowMs] = useState(0);
 
   useEffect(() => {
     if (!lastUpdated) return;
-    setTimeAgo(getTimeAgo(lastUpdated));
-    setFlash(true);
-    const flashTimeout = setTimeout(() => setFlash(false), 800);
 
     const interval = setInterval(() => {
-      setTimeAgo(getTimeAgo(lastUpdated));
+      setNowMs(Date.now());
     }, 1000);
 
     return () => {
       clearInterval(interval);
-      clearTimeout(flashTimeout);
     };
   }, [lastUpdated]);
 
-  const isStale = lastUpdated && Date.now() - lastUpdated.getTime() > 30_000;
+  const effectiveNow = lastUpdated ? Math.max(nowMs, lastUpdated.getTime()) : nowMs;
+  const isStale = lastUpdated ? effectiveNow - lastUpdated.getTime() > 30_000 : false;
+  const flash = lastUpdated ? effectiveNow - lastUpdated.getTime() < 800 : false;
+  const timeAgo = lastUpdated ? getTimeAgo(lastUpdated, effectiveNow) : '';
 
   return (
     <div className="flex items-center gap-2">

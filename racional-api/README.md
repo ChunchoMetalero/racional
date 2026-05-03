@@ -1,98 +1,228 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Racional API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST de inversiones construida con **NestJS v11** y **PostgreSQL** (via Prisma 7) que permite a los usuarios gestionar portafolios, registrar movimientos de efectivo y operar instrumentos financieros.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Instrucciones para ejecutar la API
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Prerrequisitos
 
-## Project setup
+- Node.js 20+
+- pnpm (`npm install -g pnpm`)
+- Docker y Docker Compose
+
+---
+
+### Opción A — Stack completo con Docker (más simple)
 
 ```bash
-$ pnpm install
+cp .env.example .env   # Edita JWT_SECRET con un valor seguro
+docker compose up
 ```
 
-## Compile and run the project
+El proceso de arranque hace automáticamente:
+1. Levanta PostgreSQL y espera a que esté listo (`healthcheck`)
+2. Construye la imagen de la API — durante el build ejecuta `prisma generate` (genera el cliente TypeScript a partir de `schema.prisma`)
+3. Al iniciar el contenedor ejecuta `prisma migrate deploy` — aplica todas las migraciones pendientes y crea las tablas
+4. Arranca el servidor NestJS
+
+La API queda disponible en `http://localhost:3000/api/v1`. No se requiere ningún paso adicional de base de datos.
+
+---
+
+### Opción B — Solo PostgreSQL en Docker + API en local (hot-reload)
 
 ```bash
-# development
-$ pnpm run start
+# 1. Configura variables de entorno
+cp .env.example .env          # Edita DATABASE_URL y JWT_SECRET
 
-# watch mode
-$ pnpm run start:dev
+# 2. Instala dependencias
+pnpm install
 
-# production mode
-$ pnpm run start:prod
+# 3. Levanta la base de datos
+docker compose up -d postgres
+
+# 4. Genera el cliente Prisma y aplica migraciones (un solo comando)
+pnpm db:setup
+# Equivale a: prisma generate && prisma migrate dev
+# - prisma generate: genera src/generated/prisma/ desde schema.prisma (no requiere DB)
+# - prisma migrate dev: crea las tablas en la DB
+
+# 5. Inicia el servidor con hot-reload
+pnpm start:dev
 ```
 
-## Run tests
+La API queda disponible en `http://localhost:3000`.
+
+> **Nota:** si modificas `prisma/schema.prisma`, vuelve a ejecutar `pnpm db:setup` con un nombre para la migración:
+> ```bash
+> pnpm exec prisma migrate dev --name <nombre-del-cambio>
+> pnpm prisma:generate
+> ```
+
+---
+
+### Variables de entorno
+
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `DATABASE_URL` | URL de conexión a PostgreSQL | `postgresql://user:pass@localhost:5432/racional?schema=public` |
+| `JWT_SECRET` | Secreto para firmar JWTs | `change-me-to-a-long-random-string` |
+| `PORT` | Puerto del servidor | `3000` |
+| `POSTGRES_USER` | Usuario del contenedor Docker | `racional` |
+| `POSTGRES_PASSWORD` | Contraseña del contenedor Docker | `racional` |
+| `POSTGRES_DB` | Base de datos del contenedor Docker | `racional` |
+
+### Documentación interactiva (Swagger)
+
+```
+http://localhost:3000/api/v1/docs
+```
+
+### Comandos de desarrollo
 
 ```bash
-# unit tests
-$ pnpm run test
+pnpm start:dev     # Servidor con hot-reload
+pnpm build         # Compila TypeScript a dist/
+pnpm start:prod    # Ejecuta el build compilado
 
-# e2e tests
-$ pnpm run test:e2e
+pnpm test          # Tests unitarios
+pnpm test:e2e      # Tests end-to-end
+pnpm test:cov      # Tests con cobertura
 
-# test coverage
-$ pnpm run test:cov
+pnpm lint          # ESLint con auto-fix
+pnpm format        # Prettier
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Comandos Prisma útiles
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm db:setup                        # generate + migrate dev (setup inicial o tras cambiar schema)
+pnpm exec prisma generate            # Regenera el cliente TS desde schema.prisma
+pnpm exec prisma migrate dev         # Aplica/crea migraciones en desarrollo
+pnpm exec prisma migrate deploy      # Aplica migraciones en producción (sin interactividad)
+pnpm exec prisma migrate reset       # Borra y recrea la DB (solo desarrollo)
+pnpm exec prisma studio              # Abre el explorador visual de la base de datos
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## Rutas de la API
 
-Check out a few resources that may come in handy when working with NestJS:
+URL base: `/api/v1`
+Todas las rutas requieren `Authorization: Bearer <JWT>` salvo las marcadas como públicas.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Autenticación
 
-## Support
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/auth/register` | Crea usuario y portafolio por defecto; retorna JWT | Pública |
+| POST | `/auth/login` | Autentica usuario; retorna JWT | Pública |
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Usuarios
 
-## Stay in touch
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/users/me` | Obtiene perfil del usuario autenticado |
+| PATCH | `/users/me` | Edita información personal (nombre, apellido, teléfono) |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Portafolios
 
-## License
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/portfolios` | Lista los portafolios del usuario |
+| GET | `/portfolios/:id` | Obtiene un portafolio específico |
+| PATCH | `/portfolios/:id` | Edita nombre y/o descripción del portafolio |
+| GET | `/portfolios/:id/value` | Valor libro: `cashBalance + Σ(qty × avgCostBasis)` con detalle de posiciones |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Transacciones
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/portfolios/:portfolioId/transactions/deposit` | Registra un depósito de efectivo |
+| POST | `/portfolios/:portfolioId/transactions/withdrawal` | Registra un retiro de efectivo (valida saldo suficiente) |
+| GET | `/portfolios/:portfolioId/transactions` | Lista movimientos (paginado; `?type=DEPOSIT\|WITHDRAWAL`) |
+
+### Órdenes
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/portfolios/:portfolioId/orders/buy` | Registra una compra de acciones |
+| POST | `/portfolios/:portfolioId/orders/sell` | Registra una venta de acciones (valida posición suficiente) |
+| GET | `/portfolios/:portfolioId/orders` | Lista órdenes (paginado; `?ticker=AAPL&side=BUY\|SELL`) |
+
+---
+
+## Modelo de datos
+
+```
+┌──────────┐  1 ──── 1  ┌─────────────┐  1 ──── N  ┌────────────┐
+│   User   │────────────│  Portfolio  │────────────│  Position  │
+└──────────┘            └─────────────┘            └────────────┘
+      │                       │
+      │ 1                     │ 1
+      │                       │
+      ▼ N                     ▼ N
+┌─────────────┐        ┌──────────────┐
+│ Transaction │        │    Order     │
+└─────────────┘        └──────────────┘
+```
+
+### Entidades
+
+**`User`**
+Almacena credenciales (`email`, `passwordHash`) y datos personales (`firstName`, `lastName`, `phoneNumber`). La contraseña se hashea con bcrypt (10 salt rounds) y nunca se expone en las respuestas.
+
+**`Portfolio`**
+Relación 1-a-1 con `User`. Centraliza el saldo en efectivo (`cashBalance`) y actúa como contenedor de posiciones y movimientos. Se crea automáticamente al registrar el usuario — no requiere paso adicional.
+
+**`Position`**
+Índice único `(portfolioId, ticker)`. Mantiene la cantidad de acciones en cartera y el **precio promedio ponderado** (`avgCostBasis`). Se recalcula en cada compra:
+
+```
+avgCostBasis = (oldQty × oldAvg + newQty × newPrice) / (oldQty + newQty)
+```
+
+Si la cantidad llega a cero al vender, el registro se elimina.
+
+**`Transaction`**
+Registra cada depósito o retiro con monto, fecha y notas opcionales. Pertenece tanto al `User` como al `Portfolio` para simplificar consultas de auditoría.
+
+**`Order`**
+Registra cada compra o venta con `ticker`, `quantity`, `price` y `totalValue` (precalculado y persistido para auditoría). Pertenece tanto al `User` como al `Portfolio`.
+
+### Decisiones de diseño
+
+| Decisión | Justificación |
+|----------|---------------|
+| `Decimal(18,2)` para montos en efectivo | Evita errores de punto flotante inherentes a `float` en aritmética financiera |
+| `Decimal(18,8)` para precios y cantidades | Soporta instrumentos fraccionables (crypto, ETFs con muchos decimales) |
+| Fechas almacenadas como `DATE` en UTC (`T00:00:00.000Z`) | Previene desplazamientos de zona horaria: `2024-01-15` siempre es el 15 independiente del servidor |
+| `isolationLevel: 'Serializable'` en todas las escrituras financieras | Previene race conditions: doble gasto, oversell, retiros concurrentes por encima del saldo |
+| `WHERE id = :id AND userId = :userId` en cada consulta de recursos | Valida existencia y propiedad en un único round-trip a la base de datos (no hay paso separado de autorización) |
+| `totalValue` desnormalizado en `Order` | Preserva el valor histórico exacto de la orden; si el precio se corrigiera luego, el registro histórico queda intacto |
+| Portfolio creado automáticamente en el registro | Simplifica la experiencia del usuario: puede operar desde el primer momento sin setup adicional |
+| Relación `User → Portfolio` 1-a-1 | Modelo de datos adecuado para el alcance del challenge; extensible a 1-N removiendo el `@unique` en `Portfolio.userId` y migrando los datos existentes |
+
+---
+
+## Uso de IA
+
+Este proyecto fue desarrollado con asistencia de herramientas de IA como apoyo al flujo de trabajo desde el inicio.
+
+### Cómo se integró
+
+**Scaffolding y estructura:** el asistente generó la estructura inicial de módulos NestJS (auth, users, portfolios, transactions, orders), la configuración de Prisma con el schema financiero, los guards globales y la configuración de ValidationPipe.
+
+**Lógica de negocio:** La lógica de promedio ponderado en órdenes de compra, el manejo de transacciones `Serializable` y las validaciones de saldo se desarrollaron iterativamente — el asistente propuso implementaciones que luego se refinaron en función de los requisitos exactos.
+
+**Decisiones de modelo de datos:** Se discutieron los trade-offs del esquema (precisión decimal, campo `totalValue` desnormalizado, almacenamiento de fechas en UTC, relación User↔Portfolio) y las justificaciones obtenidas se incorporaron directamente al diseño final.
+
+**DTOs y validaciones:** Los decoradores de `class-validator` para cada DTO (incluyendo regex de fechas YYYY-MM-DD y formato de tickers) fueron generados y revisados con el asistente.
+
+**Revisión de código:** Al finalizar cada módulo, el asistente revisó el código buscando inconsistencias, posibles vulnerabilidades (inyección, exposición de datos sensibles) y cobertura de casos borde financieros.
+
+### Impacto
+
+El uso de IA redujo significativamente el tiempo en tareas repetitivas (boilerplate de módulos, decoradores Swagger, configuración de testing) y permitió concentrar el esfuerzo en las reglas de negocio que requieren mayor atención: aritmética financiera con precisión exacta, aislamiento de transacciones y seguridad de ownership.

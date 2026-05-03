@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto.js';
 
@@ -19,7 +20,7 @@ export class PortfoliosService {
   }
 
   async update(userId: string, portfolioId: string, dto: UpdatePortfolioDto) {
-    if (!dto.name && !dto.description) {
+    if (Object.keys(dto).length === 0) {
       throw new BadRequestException('At least one field must be provided');
     }
     await this.findOne(userId, portfolioId);
@@ -36,29 +37,29 @@ export class PortfoliosService {
     });
     if (!portfolio) throw new NotFoundException('Portfolio not found');
 
-    const cashBalance = portfolio.cashBalance.toNumber();
+    const cashBalance = portfolio.cashBalance;
 
     const positions = portfolio.positions.map((p) => {
-      const quantity = p.quantity.toNumber();
-      const avgCostBasis = p.avgCostBasis.toNumber();
+      const bookValue = p.quantity.times(p.avgCostBasis).toDecimalPlaces(2);
       return {
         ticker: p.ticker,
-        quantity,
-        avgCostBasis,
-        bookValue: parseFloat((quantity * avgCostBasis).toFixed(2)),
+        quantity: p.quantity.toNumber(),
+        avgCostBasis: p.avgCostBasis.toNumber(),
+        bookValue: bookValue.toNumber(),
       };
     });
 
-    const bookValue = parseFloat(
-      positions.reduce((sum, p) => sum + p.bookValue, 0).toFixed(2),
+    const bookValue = positions.reduce(
+      (sum, p) => sum.plus(new Prisma.Decimal(p.bookValue)),
+      new Prisma.Decimal(0),
     );
 
     return {
       portfolioId,
       currency: portfolio.currency,
-      cashBalance,
-      bookValue,
-      totalValue: parseFloat((cashBalance + bookValue).toFixed(2)),
+      cashBalance: cashBalance.toNumber(),
+      bookValue: bookValue.toNumber(),
+      totalValue: cashBalance.plus(bookValue).toNumber(),
       positions,
     };
   }

@@ -8,14 +8,14 @@ export class CreateOrderDto {
   @Matches(/^[A-Z0-9.]+$/, { message: 'ticker must be uppercase letters, digits, or dots' })
   ticker: string;
 
-  @ApiProperty({ example: 10, description: 'Number of shares (always positive)' })
-  @IsNumber()
+  @ApiProperty({ example: 10, description: 'Number of shares (always positive, max 8 decimal places)' })
+  @IsNumber({ maxDecimalPlaces: 8 })
   @IsPositive()
   @Type(() => Number)
   quantity: number;
 
-  @ApiProperty({ example: 182.5, description: 'Price per share at execution' })
-  @IsNumber()
+  @ApiProperty({ example: 182.5, description: 'Price per share at execution (max 8 decimal places)' })
+  @IsNumber({ maxDecimalPlaces: 8 })
   @IsPositive()
   @Type(() => Number)
   price: number;

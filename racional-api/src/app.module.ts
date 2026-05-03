@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { envValidationSchema } from './config/env.validation.js';
 import { PortfoliosModule } from './portfolios/portfolios.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { TransactionsModule } from './transactions/transactions.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module.js';
     UsersModule,
     AuthModule,
     PortfoliosModule,
+    TransactionsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })

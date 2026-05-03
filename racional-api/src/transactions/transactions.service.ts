@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/client';
+import { Prisma } from '@prisma/client';
 import { TransactionType } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTransactionDto } from './dto/create-transaction.dto.js';
@@ -23,7 +23,7 @@ export class TransactionsService {
         if (!portfolio) throw new NotFoundException('Portfolio not found');
 
         const balance = portfolio.cashBalance;
-        const amount = new Decimal(dto.amount.toString());
+        const amount = new Prisma.Decimal(dto.amount.toString());
 
         if (type === TransactionType.WITHDRAWAL && balance.lessThan(amount)) {
           throw new BadRequestException('Insufficient cash balance');

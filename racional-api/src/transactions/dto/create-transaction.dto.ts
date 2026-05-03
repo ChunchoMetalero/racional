@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsPositive, IsString, Matches } from 'class-validator';
 
 export class CreateTransactionDto {
   @ApiProperty({ example: 1500.0, description: 'Amount (always positive)' })
@@ -10,7 +10,7 @@ export class CreateTransactionDto {
   amount: number;
 
   @ApiProperty({ example: '2024-04-15', description: 'Business date (YYYY-MM-DD)' })
-  @IsDateString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be in YYYY-MM-DD format' })
   date: string;
 
   @ApiPropertyOptional({ example: 'Monthly savings deposit' })

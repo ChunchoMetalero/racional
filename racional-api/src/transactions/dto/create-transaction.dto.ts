@@ -3,8 +3,8 @@ import { Type } from 'class-transformer';
 import { IsNumber, IsOptional, IsPositive, IsString, Matches } from 'class-validator';
 
 export class CreateTransactionDto {
-  @ApiProperty({ example: 1500.0, description: 'Amount (always positive)' })
-  @IsNumber()
+  @ApiProperty({ example: 1500.0, description: 'Amount (always positive, max 2 decimal places)' })
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   @Type(() => Number)
   amount: number;
